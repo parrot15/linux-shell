@@ -5,27 +5,41 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sstream>
+#include <ctime>
+#include <chrono>
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
 using namespace std;
 
-int main (){
-    while (true){
-        cout << "My Shell$ ";
-        string inputline;
-        getline (cin, inputline);   // get a line from standard input
-        if (inputline == string("exit")){
-            cout << "Bye!! End of shell" << endl;
+void display_prompt() {
+    char current_user_buffer[30];
+    getlogin_r(current_user_buffer, sizeof(char) * 30);
+
+    auto current_time = chrono::system_clock::to_time_t(chrono::system_clock::now());
+    auto current_date = strtok(ctime(&current_time), "\n");
+
+    cout << string(current_user_buffer) << ": " << current_date << "$ " << flush;
+}
+
+int main() {
+    while (true) {
+        display_prompt();
+        string input_line;
+        getline(cin, input_line);  // get a line from standard input
+        if (input_line == string("exit")) {
+            cout << "Shell exited" << endl;
             break;
         }
-        int pid = fork ();
-        if (pid == 0){ //child process
+        int pid = fork();
+        if (pid == 0) {  // child process
             // preparing the input command for execution
-            char* args [] = {(char *) inputline.c_str(), NULL};  
-            execvp (args [0], args);
-        }else{
-            waitpid (pid, 0, 0); // wait for the child process 
+            char* args[] = {(char*) input_line.c_str(), NULL};
+            execvp(args[0], args);
+        } else {
+            waitpid(pid, 0, 0);  // wait for the child process
             // we will discuss why waitpid() is preferred over wait()
         }
     }
