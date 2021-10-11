@@ -11,6 +11,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include "parser.h"
 
 using namespace std;
 
@@ -25,10 +26,12 @@ void display_prompt() {
 }
 
 int main() {
+    Parser input_parser;
     while (true) {
         display_prompt();
         string input_line;
         getline(cin, input_line);  // get a line from standard input
+        vector<string> input_tokens = input_parser.tokenize(input_line);
         if (input_line == string("exit")) {
             cout << "Shell exited" << endl;
             break;
