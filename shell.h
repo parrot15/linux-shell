@@ -31,6 +31,7 @@ class Shell {
   bool should_run_in_background;
   std::vector<pid_t> background_pids;
   std::string previous_directory = ".";
+  std::vector<std::string> past_commands;
 
   // enum BuiltinCommand { cd, exit };
   const std::string CHANGE_DIRECTORY = "cd";

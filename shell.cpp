@@ -28,9 +28,13 @@ bool Shell::interpret_command(const string& raw_command) {
     }
   }
 
+  // add raw_command to command history
+  past_commands.push_back(raw_command);
+
   // 1.
   // cout << "interpreting command: <" << raw_command << ">" << endl;
   vector<string> command_tokens = parser.tokenize(raw_command);
+  // return true;  // debugging tokenization
   if (!parser.is_valid_input()) {
     return false;
   }
