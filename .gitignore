@@ -1,5 +1,11 @@
 # Shell executables
 start
 
+# Object files
+*.o
+
+# VSCode IDE files
+./vscode/
+
 # CLion IDE files
 .idea/
