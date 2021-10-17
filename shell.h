@@ -22,7 +22,7 @@
 
 class Shell {
  public:
-  // Shell();
+  Shell();
 
   bool interpret_command(const std::string& raw_command);
 
@@ -30,8 +30,11 @@ class Shell {
   Parser parser;
   bool should_run_in_background;
   std::vector<pid_t> background_pids;
+  std::string previous_directory = ".";
 
   // enum BuiltinCommand { cd, exit };
+  const std::string CHANGE_DIRECTORY = "cd";
+  const std::string EXIT_SHELL = "exit";
 
   int execute_pipe_slices(
       const std::vector<std::vector<std::string>>& pipe_slices);
@@ -39,9 +42,11 @@ class Shell {
       const std::vector<std::pair<std::string, std::string>>& redirect_pairings)
       const;
   // int execute_io_redirection(std::vector<std::string>& command_slice);
+  bool is_builtin_command(const std::vector<std::string>& command_tokens) const;
+  int execute_builtin_command(const std::vector<std::string>& command_tokens);
   int execute_command(const std::vector<std::string>& command_slice);
-  int execute_cd_builtin(const std::vector<std::string>& command_slice) const;
-  int execute_exit_builtin(const std::vector<std::string>& command_slice) const;
+  int change_current_directory(const std::vector<std::string>& command_tokens);
+  int exit_shell(const std::vector<std::string>& command_tokens) const;
   // void execute_builtin_command(BuiltinCommand command);
 };
 

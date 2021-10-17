@@ -3,7 +3,8 @@
 using namespace std;
 
 // get initial value for cd - in constructor?
-// Shell::Shell() : should_run_in_background(false) {}
+Shell::Shell() : previous_directory(".") {}
+// Shell::Shell() {}
 
 // destructor must clean up child background processes
 
@@ -37,31 +38,22 @@ bool Shell::interpret_command(const string& raw_command) {
     return true;
   }
 
-  // pid_t child_pid = fork();
-  // if (child_pid == 0) {
-  //   execute_command(command_tokens);
-  // } else {
-  //   background_pids.push_back(child_pid);
-  //   waitpid(child_pid, 0, 0);
-  // }
+  if (is_builtin_command(command_tokens)) {
+    // cout << "executing builtin command" << endl;
+    execute_builtin_command(command_tokens);
+    return true;
+  }
 
   // 2
   should_run_in_background = parser.is_marked_for_background(command_tokens);
   if (should_run_in_background) {
     command_tokens.pop_back();
   }
-  // TODO: make it run in background
 
   // 3
   // take the tokens and slice them up by pipes
   vector<vector<string>> pipe_slices = parser.split_by_pipe(command_tokens);
-  // pipe each slice into each other
   int error_num = execute_pipe_slices(pipe_slices);
-  // if (error_num != 0) {
-  //   return false;
-  // }
-
-  // for each pipe split, split by IO redirect
 
   // if "$(" is encountered, we have an expansion. Keep reading
   // in characters until ")" is encountered
@@ -72,37 +64,10 @@ bool Shell::interpret_command(const string& raw_command) {
 }
 
 int Shell::execute_pipe_slices(const vector<vector<string>>& pipe_slices) {
-  // cout << ">>>>> pipe slices >>>>>" << endl;
-  // for (const auto& slice : pipe_slices) {
-  //   for (const auto& token : slice) {
-  //     cout << "<" << token << "> ";
-  //   }
-  //   cout << endl;
-  // }
-  // cout << "<<<<<" << endl;
-
-  // cout << "--- pipe_fds ---" << endl;
-  // for (size_t i = 0; i < 2; ++i) {
-  //   cout << "<" << pipe_fds[i] << "> ";
-  // }
-  // cout << endl;
-  // for (const auto& command_slice : pipe_slices) {
-  // cout << "INSIDE EXECUTE PIPE SLICES" << endl;
   // Save a copy of the original stdin file descriptor
   int original_stdin_fd = dup(0);
   int original_stdout_fd = dup(1);
 
-  // vector<vector<string>> test_slices;
-  // test_slices.push_back(vector<string>{"ls", "-la"});
-  // test_slices.push_back(vector<string>{"grep", "-i", "parse"});
-  // cout << ">>> test_slices >>>" << endl;
-  // for (const auto& slice: test_slices) {
-  //   for (const auto& token: slice) {
-  //     cout << "<" << token << "> ";
-  //   }
-  //   cout << endl;
-  // }
-  // cout << "<<<" << endl;
   for (size_t i = 0; i < pipe_slices.size(); ++i) {
     vector<string> pipe_slice = pipe_slices.at(i);
     // Print current command slice
@@ -128,7 +93,7 @@ int Shell::execute_pipe_slices(const vector<vector<string>>& pipe_slices) {
         //   return -1;
         // }
         // pipe_slice = parser.get_io_redirection_command(pipe_slice);
-        
+
         // cout << ">>> [io redirection] pipe_slice >>>" << endl;
         // for (const auto& token : pipe_slice) {
         //   cout << "<" << token << "> ";
@@ -139,7 +104,7 @@ int Shell::execute_pipe_slices(const vector<vector<string>>& pipe_slices) {
             parser.get_io_redirection_pairings(pipe_slice);
         execute_io_redirection(redirect_pairings);
         pipe_slice = parser.get_io_redirection_command(pipe_slice);
-      } 
+      }
       // else {
       //   cout << "No IO redirect tokens found" << endl;
       // }
@@ -203,18 +168,18 @@ int Shell::execute_io_redirection(
                              S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
       // only do the actual redirection if it's the last IO redirect
       // if (i == redirect_pairings.size() - 1) {
-        dup2(filename_fd, 0);
-        close(filename_fd);
-        // return 0;
+      dup2(filename_fd, 0);
+      close(filename_fd);
+      // return 0;
       // }
     } else if (io_redirect == ">") {  // If output redirect
       int filename_fd = open(filename.c_str(), O_CREAT | O_WRONLY | O_TRUNC,
                              S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
       // only do the actual redirection if it's the last IO redirect
       // if (i == redirect_pairings.size() - 1) {
-        dup2(filename_fd, 1);
-        close(filename_fd);
-        // return 0;
+      dup2(filename_fd, 1);
+      close(filename_fd);
+      // return 0;
       // }
     }
   }
@@ -293,6 +258,20 @@ int Shell::execute_io_redirection(
 //   return 0;
 // }
 
+bool Shell::is_builtin_command(const vector<string>& command_tokens) const {
+  string command = command_tokens.at(0);
+  return command == CHANGE_DIRECTORY || command == EXIT_SHELL;
+}
+
+int Shell::execute_builtin_command(const vector<string>& command_tokens) {
+  string command = command_tokens.at(0);
+  if (command == CHANGE_DIRECTORY) {
+    return change_current_directory(command_tokens);
+  } else if (command == EXIT_SHELL) {
+    return exit_shell(command_tokens);
+  }
+}
+
 int Shell::execute_command(const vector<string>& command_slice) {
   if (command_slice.size() == 0) {
     return 0;
@@ -305,13 +284,15 @@ int Shell::execute_command(const vector<string>& command_slice) {
 
   // cout << "<" << args[1] << ">" << endl;
   // char* args[] = {(char*)input_command.c_str(), NULL};
-  string command = command_slice.at(0);
-  // If it's a built-in command, execute it in the shell process itself
-  if (command == "cd") {
-    return execute_cd_builtin(command_slice);
-  } else if (command == "exit") {
-    return execute_exit_builtin(command_slice);
-  }
+
+  // string command = command_slice.at(0);
+  // // If it's a built-in command, execute it in the shell process itself
+  // if (command == CHANGE_DIRECTORY) {
+  //   return change_current_directory(command_slice);
+  // } else if (command == EXIT_SHELL) {
+  //   return exit_shell(command_slice);
+  // }
+
   // If it's NOT a built-in command, execute it in a child process
   // pid_t child_pid = fork();
   // if (child_pid == 0) {  // If child
@@ -336,24 +317,27 @@ int Shell::execute_command(const vector<string>& command_slice) {
   // }
 }
 
-int Shell::execute_cd_builtin(const vector<string>& command_slice) const {
-  if (command_slice.size() > 2) {
-    cout << "cd: too many arguments" << endl;
+int Shell::change_current_directory(const vector<string>& command_tokens) {
+  if (command_tokens.size() > 2) {
+    cout << CHANGE_DIRECTORY << ": too many arguments" << endl;
     return 0;
   }
 
-  // TODO: previous directory stuff
-  // char current_directory_buffer[100];
-  // getcwd(current_directory_buffer, sizeof(current_directory_buffer));
+  // // TODO: previous directory stuff
+  char current_directory_buffer[100];
+  getcwd(current_directory_buffer, sizeof(current_directory_buffer));
   // previous_directory = string(current_directory_buffer);
-  // cout << previous_directory << endl;
+  // cout << "previous_directory: " << previous_directory << endl;
 
   int error_num = 0;
-  string command = command_slice.at(0);
-  if (command != "cd") {
-    throw runtime_error("The first token must be <cd>");
+  string command = command_tokens.at(0);
+  if (command != CHANGE_DIRECTORY) {
+    stringstream error_message;
+    error_message << "The first token must be <" << CHANGE_DIRECTORY << ">";
+    throw runtime_error(error_message.str());
   }
-  if (command_slice.size() == 1) {
+
+  if (command_tokens.size() == 1) {
     // cout << "going to home directory" << endl;
     const char* home_directory;
     // if ((home_directory = getenv("HOME")) == NULL) {
@@ -362,35 +346,42 @@ int Shell::execute_cd_builtin(const vector<string>& command_slice) const {
     }
     error_num = chdir(home_directory);
   } else {
-    string destination = command_slice.at(1);
-    // if (destination == ".") {
-    //   // cout << "staying in current directory" << endl;
-    //   error_num = chdir(".");
-    // } else if (destination == "..") {
-    //   // cout << "going up 1 directory" << endl;
-    //   error_num = chdir("..");
-    // } else {
-    //   // cout << "going to directory \"" << destination << "\"" << endl;
-    //   error_num = chdir(destination.c_str());
-    // }
-    error_num = chdir(destination.c_str());
+    string destination = command_tokens.at(1);
+    if (destination == "-") {
+      cout << previous_directory << endl;
+      error_num = chdir(previous_directory.c_str());
+    } else if (destination == ".") {
+      // cout << "staying in current directory" << endl;
+      error_num = chdir(".");
+    } else if (destination == "..") {
+      // cout << "going up 1 directory" << endl;
+      error_num = chdir("..");
+    } else {
+      // cout << "going to directory \"" << destination << "\"" << endl;
+      error_num = chdir(destination.c_str());
+    }
+    // error_num = chdir(destination.c_str());
   }
 
   if (error_num != 0) {
-    cout << "cd: " << strerror(errno) << endl;
+    cout << CHANGE_DIRECTORY << ": " << strerror(errno) << endl;
     return error_num;
   }
+
+  // TODO: previous directory stuff
+  // char current_directory_buffer[100];
+  // getcwd(current_directory_buffer, sizeof(current_directory_buffer));
+  // previous_directory = string(current_directory_buffer);
+  // cout << "previous_directory: " << previous_directory << endl;
+  previous_directory = string(current_directory_buffer);
+  // cout << "previous_directory: " << previous_directory << endl;
+
   return 0;
   // return chdir(destination)
 }
 
-int Shell::execute_exit_builtin(const vector<string>& command_slice) const {
+int Shell::exit_shell(const vector<string>& command_tokens) const {
   // clean up child background processes
   cout << "Shell exited" << endl;
-  // int status;
-  // wait(&status);
-  // exit(0) should always run in the shell (parent) process
   exit(0);
 }
-
-// void Shell::execute_builtin_command(BuiltinCommand command) {}
