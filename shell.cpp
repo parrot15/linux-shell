@@ -379,7 +379,7 @@ int Shell::change_current_directory(const vector<string>& command_tokens) {
   // getcwd(current_directory_buffer, sizeof(current_directory_buffer));
   // previous_directory = string(current_directory_buffer);
   // cout << "previous_directory: " << previous_directory << endl;
-  
+
   // previous_directory = string(current_directory_buffer);
   previous_directory = current_directory;
 

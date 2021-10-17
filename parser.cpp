@@ -57,8 +57,7 @@ vector<string> Parser::tokenize(const string& command) {
       // stringstream token_buffer;
       // bool is_string_token = token.find(SPACE) != string::npos;
       // if (is_string_token) {
-      //   token_buffer << DOUBLE_QUOTE << command.substr(start_idx,
-      //   token_length)
+      //   token_buffer << DOUBLE_QUOTE << command.substr(start_idx, token_length)
       //                << DOUBLE_QUOTE;
       // } else {
       //   token_buffer << command.substr(start_idx, token_length);

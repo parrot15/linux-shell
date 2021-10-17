@@ -37,15 +37,15 @@ class Parser {
   // Encapsulation characters
   const std::string DOUBLE_QUOTE = "\"";
   const std::string SINGLE_QUOTE = "\'";
-  const std::string OPEN_EXPANSION = "$(";
-  const std::string CLOSE_EXPANSION = ")";
+  const std::string OPEN_PAREN = "(";
+  const std::string CLOSE_PAREN = ")";
 
   // Special characters
   const std::string INPUT_REDIRECT = "<";
   const std::string OUTPUT_REDIRECT = ">";
   const std::string PIPE = "|";
   const std::string BACKGROUND_PROCESS = "&";
-//   const std::string EXPANSION = "$";
+  const std::string EXPANSION = "$";
 
   // Space character
   const std::string SPACE = " ";
