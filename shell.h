@@ -28,12 +28,12 @@ class Shell {
 
  private:
   Parser parser;
+
   bool should_run_in_background;
   std::vector<pid_t> background_pids;
-  std::string previous_directory = ".";
-  std::vector<std::string> past_commands;
 
-  // enum BuiltinCommand { cd, exit };
+  std::string previous_directory;
+
   const std::string CHANGE_DIRECTORY = "cd";
   const std::string EXIT_SHELL = "exit";
 
@@ -42,14 +42,12 @@ class Shell {
   int execute_io_redirection(
       const std::vector<std::pair<std::string, std::string>>& redirect_pairings)
       const;
-  // int execute_io_redirection(std::vector<std::string>& command_slice);
   bool is_builtin_command(const std::vector<std::string>& command_tokens) const;
   int execute_builtin_command(const std::vector<std::string>& command_tokens);
   int execute_command(const std::vector<std::string>& command_slice);
   int change_current_directory(const std::vector<std::string>& command_tokens);
   int exit_shell(const std::vector<std::string>& command_tokens) const;
   std::string get_current_directory(void) const;
-  // void execute_builtin_command(BuiltinCommand command);
 };
 
 #endif  // PA2_IMPLEMENTING_A_LINUX_SHELL_PARROT15_SHELL_H
