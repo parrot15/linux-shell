@@ -47,6 +47,7 @@ class Shell {
   int execute_command(const std::vector<std::string>& command_slice);
   int change_current_directory(const std::vector<std::string>& command_tokens);
   int exit_shell(const std::vector<std::string>& command_tokens) const;
+  std::string get_current_directory(void) const;
   // void execute_builtin_command(BuiltinCommand command);
 };
 

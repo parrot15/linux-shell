@@ -3,7 +3,7 @@
 using namespace std;
 
 // get initial value for cd - in constructor?
-Shell::Shell() : previous_directory(".") {}
+Shell::Shell() : previous_directory(get_current_directory()) {}
 // Shell::Shell() {}
 
 // destructor must clean up child background processes
@@ -324,13 +324,15 @@ int Shell::change_current_directory(const vector<string>& command_tokens) {
   }
 
   // // TODO: previous directory stuff
-  char current_directory_buffer[100];
-  getcwd(current_directory_buffer, sizeof(current_directory_buffer));
+  // char current_directory_buffer[100];
+  // getcwd(current_directory_buffer, sizeof(current_directory_buffer));
+  // string current_directory = get_current_directory();
   // previous_directory = string(current_directory_buffer);
   // cout << "previous_directory: " << previous_directory << endl;
 
   int error_num = 0;
   string command = command_tokens.at(0);
+  string current_directory = get_current_directory();
   if (command != CHANGE_DIRECTORY) {
     stringstream error_message;
     error_message << "The first token must be <" << CHANGE_DIRECTORY << ">";
@@ -373,7 +375,10 @@ int Shell::change_current_directory(const vector<string>& command_tokens) {
   // getcwd(current_directory_buffer, sizeof(current_directory_buffer));
   // previous_directory = string(current_directory_buffer);
   // cout << "previous_directory: " << previous_directory << endl;
-  previous_directory = string(current_directory_buffer);
+  
+  // previous_directory = string(current_directory_buffer);
+  previous_directory = current_directory;
+
   // cout << "previous_directory: " << previous_directory << endl;
 
   return 0;
@@ -384,4 +389,11 @@ int Shell::exit_shell(const vector<string>& command_tokens) const {
   // clean up child background processes
   cout << "Shell exited" << endl;
   exit(0);
+}
+
+string Shell::get_current_directory(void) const {
+  char current_directory_buffer[100];
+  getcwd(current_directory_buffer, sizeof(current_directory_buffer));
+
+  return string(current_directory_buffer);
 }
