@@ -3,15 +3,13 @@
 
 #include <fcntl.h>
 #include <pwd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <sstream>
@@ -44,10 +42,10 @@ class Shell {
       const;
   bool is_builtin_command(const std::vector<std::string>& command_tokens) const;
   int execute_builtin_command(const std::vector<std::string>& command_tokens);
-  int execute_command(const std::vector<std::string>& command_slice);
+  static int execute_command(const std::vector<std::string>& command_slice);
   int change_current_directory(const std::vector<std::string>& command_tokens);
-  int exit_shell(const std::vector<std::string>& command_tokens) const;
-  std::string get_current_directory(void) const;
+  static int exit_shell(const std::vector<std::string>& command_tokens);
+  static std::string get_current_directory();
 };
 
 #endif  // PA2_IMPLEMENTING_A_LINUX_SHELL_PARROT15_SHELL_H

@@ -2,7 +2,9 @@
 
 using namespace std;
 
-Shell::Shell() : previous_directory(get_current_directory()) {}
+Shell::Shell()
+    : should_run_in_background(false),
+      previous_directory(get_current_directory()) {}
 
 bool Shell::interpret_command(const string& raw_command) {
   // Clean up child processes
@@ -19,7 +21,7 @@ bool Shell::interpret_command(const string& raw_command) {
   if (!parser.is_valid_input()) {
     return false;
   }
-  if (command_tokens.size() == 0) {
+  if (command_tokens.empty()) {
     return true;
   }
 
@@ -34,7 +36,7 @@ bool Shell::interpret_command(const string& raw_command) {
   }
 
   vector<vector<string>> pipe_slices = parser.split_by_pipe(command_tokens);
-  int error_num = execute_pipe_slices(pipe_slices);
+  execute_pipe_slices(pipe_slices);
 
   return true;
 }
@@ -92,9 +94,9 @@ int Shell::execute_pipe_slices(const vector<vector<string>>& pipe_slices) {
 
 int Shell::execute_io_redirection(
     const vector<pair<string, string>>& redirect_pairings) const {
-  for (size_t i = 0; i < redirect_pairings.size(); ++i) {
-    string io_redirect = redirect_pairings.at(i).first;
-    string filename = redirect_pairings.at(i).second;
+  for (const auto& redirect_pairing : redirect_pairings) {
+    string io_redirect = redirect_pairing.first;
+    string filename = redirect_pairing.second;
 
     if (io_redirect == parser.INPUT_REDIRECT) {  // If input redirect
       int filename_fd = open(filename.c_str(), O_RDONLY,
@@ -127,7 +129,7 @@ int Shell::execute_builtin_command(const vector<string>& command_tokens) {
 }
 
 int Shell::execute_command(const vector<string>& command_slice) {
-  if (command_slice.size() == 0) {
+  if (command_slice.empty()) {
     return 0;
   }
 
@@ -185,14 +187,15 @@ int Shell::change_current_directory(const vector<string>& command_tokens) {
   return 0;
 }
 
-int Shell::exit_shell(const vector<string>& command_tokens) const {
+int Shell::exit_shell(const vector<string>& command_tokens) {
   cout << "Shell exited" << endl;
   exit(0);
+  return 0;
 }
 
-string Shell::get_current_directory(void) const {
+string Shell::get_current_directory() {
   char current_directory_buffer[100];
   getcwd(current_directory_buffer, sizeof(current_directory_buffer));
 
-  return string(current_directory_buffer);
+  return {current_directory_buffer};
 }

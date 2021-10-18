@@ -52,12 +52,12 @@ vector<string> Parser::tokenize(const string& command) {
   if (is_double_quote_closed) {
     cout << "Missing closing double quote" << endl;
     is_input_valid = false;
-    return vector<string>();
+    return {};
   }
   if (is_single_quote_closed) {
     cout << "Missing closing single quote" << endl;
     is_input_valid = false;
-    return vector<string>();
+    return {};
   }
 
   return tokens;

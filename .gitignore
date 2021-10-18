@@ -5,7 +5,7 @@ start
 *.o
 
 # VSCode IDE files
-./vscode/
+.vscode/
 
 # CLion IDE files
 .idea/
