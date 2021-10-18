@@ -41,8 +41,8 @@ bool Shell::interpret_command(const string& raw_command) {
 
 int Shell::execute_pipe_slices(const vector<vector<string>>& pipe_slices) {
   // Save a copy of the original stdin file descriptor
-  int original_stdin_fd = dup(0);
-  int original_stdout_fd = dup(1);
+  int original_stdin_fd = dup(STDIN_FILENO);
+  int original_stdout_fd = dup(STDOUT_FILENO);
 
   for (size_t i = 0; i < pipe_slices.size(); ++i) {
     vector<string> pipe_slice = pipe_slices.at(i);
@@ -64,7 +64,7 @@ int Shell::execute_pipe_slices(const vector<vector<string>>& pipe_slices) {
       // Make child processes write to pipe instead of stdout
       // except for last one. The last one should write to stdout.
       if (i < pipe_slices.size() - 1) {
-        dup2(pipe_fds[1], 1);
+        dup2(pipe_fds[1], STDOUT_FILENO);
         close(pipe_fds[1]);
       }
       int error_num = execute_command(pipe_slice);
@@ -80,14 +80,14 @@ int Shell::execute_pipe_slices(const vector<vector<string>>& pipe_slices) {
       }
 
       // Make parent process read from pipe instead of stdin
-      dup2(pipe_fds[0], 0);
+      dup2(pipe_fds[0], STDIN_FILENO);
       close(pipe_fds[1]);
     }
   }
 
   // Replace current stdin file descriptor with original value
-  dup2(original_stdin_fd, 0);
-  dup2(original_stdout_fd, 1);
+  dup2(original_stdin_fd, STDIN_FILENO);
+  dup2(original_stdout_fd, STDOUT_FILENO);
 }
 
 int Shell::execute_io_redirection(
@@ -99,12 +99,12 @@ int Shell::execute_io_redirection(
     if (io_redirect == parser.INPUT_REDIRECT) {  // If input redirect
       int filename_fd = open(filename.c_str(), O_RDONLY,
                              S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-      dup2(filename_fd, 0);
+      dup2(filename_fd, STDIN_FILENO);
       close(filename_fd);
     } else if (io_redirect == parser.OUTPUT_REDIRECT) {  // If output redirect
       int filename_fd = open(filename.c_str(), O_CREAT | O_WRONLY | O_TRUNC,
                              S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-      dup2(filename_fd, 1);
+      dup2(filename_fd, STDOUT_FILENO);
       close(filename_fd);
     }
   }
