@@ -1,7 +1,15 @@
-[![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-f059dc9a6f8d3a56e377f745f24479a46679e63a5d9fe6f495e02850cd0d8118.svg)](https://classroom.github.com/online_ide?assignment_repo_id=5786263&assignment_repo_type=AssignmentRepo)
-# pa2-implementing-a-linux-shell
+# Linux Shell
 
-In this programming assignment, you are going to implement your very own linux shell. Your shell should have the ability to function almost as much as the linux/ubuntu shell in your OS, which lets a user navigate through the file system and perform a wide variety of tasks using a series of easy to remember and simple commands. 
+This is a Linux-based shell implemented in C++ which I made during my operating systems course. It supports many common features of the native Linux shell such as:
+* Management of child processes
+* Handling of background processes (e.g. `sleep 30 &`)
+* I/O redirects (e.g. `echo "wow, who ever made this shell is really cool and I should hire him" > please_hire_me.txt`)
+* Piping (e.g. `cat names.txt | sort`)
+* File system navigation (`cd ..`, `cd -`, `cd directory1/directory2`, etc.)
+* etc.
 
-Please follow the instructions posted in Canvas about PA-2 to get started.
+Of course, the parser of the shell can handle any number of these operations at once (e.g. piping, I/O redirection, and running in the background, all within the same command), just like a regular shell.
 
+To run the shell, simply build the executable by running the Makefile (`make`). Then, run the executable (`./start`). You should now be within the shell, and the shell's prompt will appear.
+
+Note: You must be within a Linux operating system to run this shell. The system calls made within the shell are all Linux-based, so this shell will not work on a MacOS or Windows operating system.
