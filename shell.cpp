@@ -1,12 +1,10 @@
 #include "shell.h"
 
-using namespace std;
-
 Shell::Shell()
     : should_run_in_background(false),
       previous_directory(get_current_directory()) {}
 
-bool Shell::interpret_command(const string& raw_command) {
+bool Shell::interpret_command(const std::string& raw_command) {
   // Clean up child processes
   for (size_t i = 0; i < background_pids.size(); ++i) {
     pid_t child_pid = background_pids.at(i);
@@ -17,7 +15,7 @@ bool Shell::interpret_command(const string& raw_command) {
     }
   }
 
-  vector<string> command_tokens = parser.tokenize(raw_command);
+  std::vector<std::string> command_tokens = parser.tokenize(raw_command);
   if (!parser.is_valid_input()) {
     return false;
   }
@@ -35,19 +33,19 @@ bool Shell::interpret_command(const string& raw_command) {
     command_tokens.pop_back();
   }
 
-  vector<vector<string>> pipe_slices = parser.split_by_pipe(command_tokens);
+  std::vector<std::vector<std::string>> pipe_slices = parser.split_by_pipe(command_tokens);
   execute_pipe_slices(pipe_slices);
 
   return true;
 }
 
-int Shell::execute_pipe_slices(const vector<vector<string>>& pipe_slices) {
+int Shell::execute_pipe_slices(const std::vector<std::vector<std::string>>& pipe_slices) {
   // Save a copy of the original stdin file descriptor
   int original_stdin_fd = dup(STDIN_FILENO);
   int original_stdout_fd = dup(STDOUT_FILENO);
 
   for (size_t i = 0; i < pipe_slices.size(); ++i) {
-    vector<string> pipe_slice = pipe_slices.at(i);
+    std::vector<std::string> pipe_slice = pipe_slices.at(i);
 
     // Create the pipe
     int pipe_fds[2];
@@ -57,7 +55,7 @@ int Shell::execute_pipe_slices(const vector<vector<string>>& pipe_slices) {
     pid_t child_pid = fork();
     if (child_pid == 0) {  // If child
       if (parser.has_io_redirection(pipe_slice)) {
-        vector<pair<string, string>> redirect_pairings =
+        std::vector<std::pair<std::string, std::string>> redirect_pairings =
             parser.get_io_redirection_pairings(pipe_slice);
         execute_io_redirection(redirect_pairings);
         pipe_slice = parser.get_io_redirection_command(pipe_slice);
@@ -71,7 +69,7 @@ int Shell::execute_pipe_slices(const vector<vector<string>>& pipe_slices) {
       }
       int error_num = execute_command(pipe_slice);
       if (error_num != 0) {
-        cout << "command not found: " << pipe_slice.at(0) << endl;
+        std::cout << "command not found: " << pipe_slice.at(0) << std::endl;
         return error_num;
       }
     } else {  // If parent
@@ -93,10 +91,10 @@ int Shell::execute_pipe_slices(const vector<vector<string>>& pipe_slices) {
 }
 
 int Shell::execute_io_redirection(
-    const vector<pair<string, string>>& redirect_pairings) const {
+    const std::vector<std::pair<std::string, std::string>>& redirect_pairings) const {
   for (const auto& redirect_pairing : redirect_pairings) {
-    string io_redirect = redirect_pairing.first;
-    string filename = redirect_pairing.second;
+    std::string io_redirect = redirect_pairing.first;
+    std::string filename = redirect_pairing.second;
 
     if (io_redirect == parser.INPUT_REDIRECT) {  // If input redirect
       int filename_fd = open(filename.c_str(), O_RDONLY,
@@ -114,47 +112,47 @@ int Shell::execute_io_redirection(
   return 0;
 }
 
-bool Shell::is_builtin_command(const vector<string>& command_tokens) const {
-  string command = command_tokens.at(0);
+bool Shell::is_builtin_command(const std::vector<std::string>& command_tokens) const {
+  std::string command = command_tokens.at(0);
   return command == CHANGE_DIRECTORY || command == EXIT_SHELL;
 }
 
-int Shell::execute_builtin_command(const vector<string>& command_tokens) {
-  string command = command_tokens.at(0);
+int Shell::execute_builtin_command(const std::vector<std::string>& command_tokens) {
+  std::string command = command_tokens.at(0);
   if (command == CHANGE_DIRECTORY) {
     return change_current_directory(command_tokens);
   } else if (command == EXIT_SHELL) {
-    return exit_shell(command_tokens);
+    return exit_shell();
   }
 }
 
-int Shell::execute_command(const vector<string>& command_slice) {
-  if (command_slice.empty()) {
+int Shell::execute_command(const std::vector<std::string>& command_tokens) {
+  if (command_tokens.empty()) {
     return 0;
   }
 
-  char** args = new char*[command_slice.size() + 1];
-  for (int i = 0; i < command_slice.size(); ++i) {
-    args[i] = (char*)command_slice[i].c_str();
+  char** args = new char*[command_tokens.size() + 1];
+  for (int i = 0; i < command_tokens.size(); ++i) {
+    args[i] = (char*)command_tokens[i].c_str();
   }
-  args[command_slice.size()] = nullptr;
+  args[command_tokens.size()] = nullptr;
 
   return execvp(args[0], args);
 }
 
-int Shell::change_current_directory(const vector<string>& command_tokens) {
+int Shell::change_current_directory(const std::vector<std::string>& command_tokens) {
   if (command_tokens.size() > 2) {
-    cout << CHANGE_DIRECTORY << ": too many arguments" << endl;
+    std::cout << CHANGE_DIRECTORY << ": too many arguments" << std::endl;
     return 0;
   }
 
   int error_num = 0;
-  string command = command_tokens.at(0);
-  string current_directory = get_current_directory();
+  std::string command = command_tokens.at(0);
+  std::string current_directory = get_current_directory();
   if (command != CHANGE_DIRECTORY) {
-    stringstream error_message;
+    std::stringstream error_message;
     error_message << "The first token must be <" << CHANGE_DIRECTORY << ">";
-    throw runtime_error(error_message.str());
+    throw std::runtime_error(error_message.str());
   }
 
   if (command_tokens.size() == 1) {
@@ -164,9 +162,9 @@ int Shell::change_current_directory(const vector<string>& command_tokens) {
     }
     error_num = chdir(home_directory);
   } else {
-    string destination = command_tokens.at(1);
+    std::string destination = command_tokens.at(1);
     if (destination == "-") {
-      cout << previous_directory << endl;
+      std::cout << previous_directory << std::endl;
       error_num = chdir(previous_directory.c_str());
     } else if (destination == ".") {
       error_num = chdir(".");
@@ -178,7 +176,7 @@ int Shell::change_current_directory(const vector<string>& command_tokens) {
   }
 
   if (error_num != 0) {
-    cout << CHANGE_DIRECTORY << ": " << strerror(errno) << endl;
+    std::cout << CHANGE_DIRECTORY << ": " << strerror(errno) << std::endl;
     return error_num;
   }
 
@@ -187,15 +185,15 @@ int Shell::change_current_directory(const vector<string>& command_tokens) {
   return 0;
 }
 
-int Shell::exit_shell(const vector<string>& command_tokens) {
-  cout << "Shell exited" << endl;
-  exit(0);
-  return 0;
-}
-
-string Shell::get_current_directory() {
+std::string Shell::get_current_directory() {
   char current_directory_buffer[100];
   getcwd(current_directory_buffer, sizeof(current_directory_buffer));
 
   return {current_directory_buffer};
+}
+
+int Shell::exit_shell() {
+  std::cout << "Shell exited" << std::endl;
+  exit(0);
+  return 0;
 }

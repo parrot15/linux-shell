@@ -1,26 +1,24 @@
 #include "parser.h"
 
-using namespace std;
-
-vector<string> Parser::tokenize(const string& command) {
+std::vector<std::string> Parser::tokenize(const std::string& command) {
   is_input_valid = true;
-  vector<string> tokens;
+  std::vector<std::string> tokens;
 
   bool is_double_quote_closed = false;
   bool is_single_quote_closed = false;
   int token_length = 0;
   for (int i = 0; i < command.length(); ++i) {
     int start_idx = i;
-    if (string(1, command[i]) == DOUBLE_QUOTE) {
+    if (std::string(1, command[i]) == DOUBLE_QUOTE) {
       is_double_quote_closed = true;
-    } else if (string(1, command[i]) == SINGLE_QUOTE) {
+    } else if (std::string(1, command[i]) == SINGLE_QUOTE) {
       is_single_quote_closed = true;
     }
 
     if (is_double_quote_closed) {
       ++i;
       ++start_idx;
-      while (i < command.length() && string(1, command[i]) != DOUBLE_QUOTE) {
+      while (i < command.length() && std::string(1, command[i]) != DOUBLE_QUOTE) {
         ++i;
       }
       if (i < command.length()) {
@@ -31,7 +29,7 @@ vector<string> Parser::tokenize(const string& command) {
     } else if (is_single_quote_closed) {
       ++i;
       ++start_idx;
-      while (i < command.length() && string(1, command[i]) != SINGLE_QUOTE) {
+      while (i < command.length() && std::string(1, command[i]) != SINGLE_QUOTE) {
         ++i;
       }
       if (i < command.length()) {
@@ -40,7 +38,7 @@ vector<string> Parser::tokenize(const string& command) {
       token_length = i - start_idx;
       ++i;
     } else {
-      while (i < command.length() && string(1, command[i]) != SPACE) {
+      while (i < command.length() && std::string(1, command[i]) != SPACE) {
         ++i;
       }
       token_length = i - start_idx;
@@ -50,12 +48,12 @@ vector<string> Parser::tokenize(const string& command) {
     }
   }
   if (is_double_quote_closed) {
-    cout << "Missing closing double quote" << endl;
+    std::cout << "Missing closing double quote" << std::endl;
     is_input_valid = false;
     return {};
   }
   if (is_single_quote_closed) {
-    cout << "Missing closing single quote" << endl;
+    std::cout << "Missing closing single quote" << std::endl;
     is_input_valid = false;
     return {};
   }
@@ -66,11 +64,11 @@ vector<string> Parser::tokenize(const string& command) {
 bool Parser::is_valid_input() const { return is_input_valid; }
 
 bool Parser::is_marked_for_background(
-    const vector<string>& command_tokens) const {
+    const std::vector<std::string>& command_tokens) const {
   return command_tokens.back() == BACKGROUND_PROCESS;
 }
 
-bool Parser::has_io_redirection(const vector<string>& command_tokens) const {
+bool Parser::has_io_redirection(const std::vector<std::string>& command_tokens) const {
   bool has_input_redirect = find(command_tokens.begin(), command_tokens.end(),
                                  INPUT_REDIRECT) != command_tokens.end();
   bool has_output_redirect = find(command_tokens.begin(), command_tokens.end(),
@@ -78,22 +76,62 @@ bool Parser::has_io_redirection(const vector<string>& command_tokens) const {
   return has_input_redirect || has_output_redirect;
 }
 
-vector<vector<string>> Parser::split_by_pipe(
-    const vector<string>& command_tokens) const {
+std::vector<std::string> Parser::get_io_redirection_command(
+    const std::vector<std::string>& redirect_slice) const {
+  std::vector<std::string> command_tokens;
+  for (const auto& token : redirect_slice) {
+    if (token == INPUT_REDIRECT || token == OUTPUT_REDIRECT) {
+      break;
+    }
+    command_tokens.push_back(token);
+  }
+  return command_tokens;
+}
+
+std::vector<std::pair<std::string, std::string>> Parser::get_io_redirection_pairings(
+    const std::vector<std::string>& redirect_slice) const {
+  std::vector<std::string> slice_without_command = redirect_slice;
+  for (size_t i = 0; i < slice_without_command.size(); ++i) {
+    std::string current_token = slice_without_command.at(i);
+    if (current_token == INPUT_REDIRECT || current_token == OUTPUT_REDIRECT) {
+      break;
+    }
+    slice_without_command.erase(slice_without_command.begin() + i);
+    --i;
+  }
+
+  std::vector<std::pair<std::string, std::string>> redirect_pairings;
+  for (size_t i = 0; i < slice_without_command.size() - 1; i += 2) {
+    std::string first_token = slice_without_command.at(i);
+    std::string second_token = slice_without_command.at(i + 1);
+
+    std::pair<std::string, std::string> current_pairing;
+    if (first_token == INPUT_REDIRECT || first_token == OUTPUT_REDIRECT) {
+      redirect_pairings.emplace_back(first_token, second_token);
+    } else {
+      throw std::runtime_error("Received an invalid redirection token");
+    }
+  }
+
+  return redirect_pairings;
+}
+
+std::vector<std::vector<std::string>> Parser::split_by_pipe(
+    const std::vector<std::string>& command_tokens) const {
   // If there are no pipe tokens, then do nothing
   if (find(command_tokens.begin(), command_tokens.end(), PIPE) ==
       command_tokens.end()) {
-    return vector<vector<string>>{command_tokens};
+    return std::vector<std::vector<std::string>>{command_tokens};
   }
 
-  vector<vector<string>> pipe_slices;
-  vector<string> current_slice;
+  std::vector<std::vector<std::string>> pipe_slices;
+  std::vector<std::string> current_slice;
   for (size_t i = 0; i < command_tokens.size(); ++i) {
-    string current_token = command_tokens.at(i);
+    std::string current_token = command_tokens.at(i);
     current_slice.push_back(current_token);
 
     // Append to the list of lists if we've hit a pipe or we reached the end
-    if (current_token == PIPE or i == command_tokens.size() - 1) {
+    if (current_token == PIPE || i == command_tokens.size() - 1) {
       if (current_token == PIPE) {
         current_slice.pop_back();
       }
@@ -103,44 +141,4 @@ vector<vector<string>> Parser::split_by_pipe(
   }
 
   return pipe_slices;
-}
-
-vector<string> Parser::get_io_redirection_command(
-    const vector<string>& redirect_slice) const {
-  vector<string> command_tokens;
-  for (const auto& token : redirect_slice) {
-    if (token == INPUT_REDIRECT or token == OUTPUT_REDIRECT) {
-      break;
-    }
-    command_tokens.push_back(token);
-  }
-  return command_tokens;
-}
-
-vector<pair<string, string>> Parser::get_io_redirection_pairings(
-    const vector<string>& redirect_slice) const {
-  vector<string> slice_without_command = redirect_slice;
-  for (size_t i = 0; i < slice_without_command.size(); ++i) {
-    string current_token = slice_without_command.at(i);
-    if (current_token == INPUT_REDIRECT or current_token == OUTPUT_REDIRECT) {
-      break;
-    }
-    slice_without_command.erase(slice_without_command.begin() + i);
-    --i;
-  }
-
-  vector<pair<string, string>> redirect_pairings;
-  for (size_t i = 0; i < slice_without_command.size() - 1; i += 2) {
-    string first_token = slice_without_command.at(i);
-    string second_token = slice_without_command.at(i + 1);
-
-    pair<string, string> current_pairing;
-    if (first_token == INPUT_REDIRECT || first_token == OUTPUT_REDIRECT) {
-      redirect_pairings.emplace_back(first_token, second_token);
-    } else {
-      throw runtime_error("Received an invalid redirection token");
-    }
-  }
-
-  return redirect_pairings;
 }

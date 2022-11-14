@@ -4,17 +4,19 @@
 
 #include "shell.h"
 
-using namespace std;
-
+/**
+ * Displays the shell prompt to the user. The prompt contains the
+ * name of the user and the current time.
+ */
 void display_prompt() {
   char current_user_buffer[30];
   getlogin_r(current_user_buffer, sizeof(char) * 30);
 
   auto current_time =
-      chrono::system_clock::to_time_t(chrono::system_clock::now());
+      std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   auto current_date = strtok(ctime(&current_time), "\n");
 
-  cout << string(current_user_buffer) << ": " << current_date << "$ " << flush;
+  std::cout << std::string(current_user_buffer) << ": " << current_date << "$ " << std::flush;
 }
 
 int main() {
@@ -23,8 +25,8 @@ int main() {
   for (;;) {
     display_prompt();
 
-    string input_command;
-    getline(cin, input_command);  // Get a line from standard input
+    std::string input_command;
+    getline(std::cin, input_command);  // Get a line from standard input
     bool is_valid_input = shell.interpret_command(input_command);
     if (!is_valid_input) {
       continue;
