@@ -26,7 +26,7 @@ class Shell {
    * The main control flow of the shell. Determines if the input is valid
    * and subsequently parses the input by invoking the parser. Executes
    * the parsed input. Cleans up any background processes that have finished.
-   * @param raw_command The raw user input to interpret, without any 
+   * @param raw_command The raw user input to interpret, without any
    * pre-processing.
    * @return True if the interpretation of the command was successful,
    * false if otherwise.

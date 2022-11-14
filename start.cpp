@@ -16,7 +16,8 @@ void display_prompt() {
       std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   auto current_date = strtok(ctime(&current_time), "\n");
 
-  std::cout << std::string(current_user_buffer) << ": " << current_date << "$ " << std::flush;
+  std::cout << std::string(current_user_buffer) << ": " << current_date << "$ "
+            << std::flush;
 }
 
 int main() {

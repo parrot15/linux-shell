@@ -33,13 +33,15 @@ bool Shell::interpret_command(const std::string& raw_command) {
     command_tokens.pop_back();
   }
 
-  std::vector<std::vector<std::string>> pipe_slices = parser.split_by_pipe(command_tokens);
+  std::vector<std::vector<std::string>> pipe_slices =
+      parser.split_by_pipe(command_tokens);
   execute_pipe_slices(pipe_slices);
 
   return true;
 }
 
-int Shell::execute_pipe_slices(const std::vector<std::vector<std::string>>& pipe_slices) {
+int Shell::execute_pipe_slices(
+    const std::vector<std::vector<std::string>>& pipe_slices) {
   // Save a copy of the original stdin file descriptor
   int original_stdin_fd = dup(STDIN_FILENO);
   int original_stdout_fd = dup(STDOUT_FILENO);
@@ -91,7 +93,8 @@ int Shell::execute_pipe_slices(const std::vector<std::vector<std::string>>& pipe
 }
 
 int Shell::execute_io_redirection(
-    const std::vector<std::pair<std::string, std::string>>& redirect_pairings) const {
+    const std::vector<std::pair<std::string, std::string>>& redirect_pairings)
+    const {
   for (const auto& redirect_pairing : redirect_pairings) {
     std::string io_redirect = redirect_pairing.first;
     std::string filename = redirect_pairing.second;
@@ -112,12 +115,14 @@ int Shell::execute_io_redirection(
   return 0;
 }
 
-bool Shell::is_builtin_command(const std::vector<std::string>& command_tokens) const {
+bool Shell::is_builtin_command(
+    const std::vector<std::string>& command_tokens) const {
   std::string command = command_tokens.at(0);
   return command == CHANGE_DIRECTORY || command == EXIT_SHELL;
 }
 
-int Shell::execute_builtin_command(const std::vector<std::string>& command_tokens) {
+int Shell::execute_builtin_command(
+    const std::vector<std::string>& command_tokens) {
   std::string command = command_tokens.at(0);
   if (command == CHANGE_DIRECTORY) {
     return change_current_directory(command_tokens);
@@ -140,7 +145,8 @@ int Shell::execute_command(const std::vector<std::string>& command_tokens) {
   return execvp(args[0], args);
 }
 
-int Shell::change_current_directory(const std::vector<std::string>& command_tokens) {
+int Shell::change_current_directory(
+    const std::vector<std::string>& command_tokens) {
   if (command_tokens.size() > 2) {
     std::cout << CHANGE_DIRECTORY << ": too many arguments" << std::endl;
     return 0;

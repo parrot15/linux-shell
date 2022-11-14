@@ -18,7 +18,8 @@ std::vector<std::string> Parser::tokenize(const std::string& command) {
     if (is_double_quote_closed) {
       ++i;
       ++start_idx;
-      while (i < command.length() && std::string(1, command[i]) != DOUBLE_QUOTE) {
+      while (i < command.length() &&
+             std::string(1, command[i]) != DOUBLE_QUOTE) {
         ++i;
       }
       if (i < command.length()) {
@@ -29,7 +30,8 @@ std::vector<std::string> Parser::tokenize(const std::string& command) {
     } else if (is_single_quote_closed) {
       ++i;
       ++start_idx;
-      while (i < command.length() && std::string(1, command[i]) != SINGLE_QUOTE) {
+      while (i < command.length() &&
+             std::string(1, command[i]) != SINGLE_QUOTE) {
         ++i;
       }
       if (i < command.length()) {
@@ -68,7 +70,8 @@ bool Parser::is_marked_for_background(
   return command_tokens.back() == BACKGROUND_PROCESS;
 }
 
-bool Parser::has_io_redirection(const std::vector<std::string>& command_tokens) const {
+bool Parser::has_io_redirection(
+    const std::vector<std::string>& command_tokens) const {
   bool has_input_redirect = find(command_tokens.begin(), command_tokens.end(),
                                  INPUT_REDIRECT) != command_tokens.end();
   bool has_output_redirect = find(command_tokens.begin(), command_tokens.end(),
@@ -88,7 +91,8 @@ std::vector<std::string> Parser::get_io_redirection_command(
   return command_tokens;
 }
 
-std::vector<std::pair<std::string, std::string>> Parser::get_io_redirection_pairings(
+std::vector<std::pair<std::string, std::string>>
+Parser::get_io_redirection_pairings(
     const std::vector<std::string>& redirect_slice) const {
   std::vector<std::string> slice_without_command = redirect_slice;
   for (size_t i = 0; i < slice_without_command.size(); ++i) {
